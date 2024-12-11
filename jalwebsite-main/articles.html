@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <h1>Article Management</h1>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="articles.html">Articles</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Articles Section -->
+    <section>
+        <
+            </div>
+        </div>
+    </section>
+
+       <!-- Articles Section -->
+       <section>
+        <div class="container">
+            
+            <div class="articles-flexbox">
+                <!-- Articles will be dynamically loaded here -->
+            </div>
+        </div>
+        <div class="container">
+            <h2 class="section-heading">Explore Our Latest Articles</h2>
+            <div class="articles-flexbox">
+                <!-- Article Card 1 -->
+                <div class="article">
+                    <img src="https://via.placeholder.com/300x200" alt="Article Image">
+                    <h3>Article Title 1</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus facilisis.</p>
+                    <button class="read-more-btn">Read More</button>
+                </div>
+
+                <!-- Article Card 2 -->
+                <div class="article">
+                    <img src="https://via.placeholder.com/300x200" alt="Article Image">
+                    <h3>Article Title 2</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus facilisis.</p>
+                    <button class="read-more-btn">Read More</button>
+                </div>
+
+                <!-- Article Card 3 -->
+                <div class="article">
+                    <img src="https://via.placeholder.com/300x200" alt="Article Image">
+                    <h3>Article Title 3</h3>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus facilisis.</p>
+                    <button class="read-more-btn">Read More</button>
+                </div>
+    </section>
+    <section>
+        <div class="container">
+            <h2>Add a New Article</h2>
+            <form id="add-article-form">
+                <label for="article-title">Title</label>
+                <input type="text" id="article-title" placeholder="Enter article title" required>
+
+                <label for="article-content">Content</label>
+                <textarea id="article-content" placeholder="Enter article content" required></textarea>
+
+                <label for="article-image-url">Image URL</label>
+                <input type="text" id="article-image-url" placeholder="Enter image URL" required>
+
+                <button type="submit">Submit Article</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <p>© 2024 Article Management. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        const articlesContainer = document.getElementById('articles-container');
+        const addArticleForm = document.getElementById('add-article-form');
+
+        // Fetch and display articles
+        function fetchArticles() {
+            fetch('http://127.0.0.1:8000/articles')
+                .then(response => response.json())
+                .then(articles => {
+                    articlesContainer.innerHTML = '';
+                    articles.forEach(article => {
+                        const articleHTML = `
+                            <div class="article">
+                                <img src="${article.image_url}" alt="Article Image">
+                                <h3>${article.title}</h3>
+                                <p>${article.content.substring(0, 100)}...</p>
+                                <p>Status: <strong>${article.status}</strong></p>
+                                ${
+                                    article.status === 'pending'
+                                        ? `<button onclick="verifyArticle(${article.id})">Verify</button>`
+                                        : ''
+                                }
+                            </div>`;
+                        articlesContainer.innerHTML += articleHTML;
+                    });
+                })
+                .catch(error => console.error('Error fetching articles:', error));
+        }
+
+        // Add a new article
+        addArticleForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const title = document.getElementById('article-title').value;
+            const content = document.getElementById('article-content').value;
+            const image_url = document.getElementById('article-image-url').value;
+            
+            // Generate a unique ID using timestamp
+            const id = Date.now();
+            const newArticle = { id, title, content, image_url, status: 'pending' };
+
+            fetch('http://127.0.0.1:8000/articles', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newArticle)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    fetchArticles();
+                    addArticleForm.reset();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add article. Please try again.');
+                });
+        });
+
+        // Verify an article
+        function verifyArticle(articleId) {
+            fetch(`http://127.0.0.1:8000/articles/${articleId}/verify`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    fetchArticles();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to verify article. Please try again.');
+                });
+        }
+
+        // Initial fetch
+        fetchArticles();
+    </script>
+</body>
+</html>
